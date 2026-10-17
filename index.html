@@ -1,0 +1,559 @@
+<title>애정 지수</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Gaegu:wght@400;700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column like a pocket diary. Gauge on top, the curve below, memos pinned like notes. */
+:root{
+  --bg:#FAF5F6;
+  --surface:#FFFFFF;
+  --ink:#2A1820;
+  --muted:#80666F;
+  --line:#ECDDE2;
+  --hot:#D7263D;
+  --cold:#3D69B0;
+  --memo:#FFF2C9;
+  --memo-ink:#4B3A10;
+  --shadow:0 1px 2px rgba(42,24,32,.06),0 8px 24px rgba(42,24,32,.06);
+  --f-display:"Bagel Fat One","Black Han Sans","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-hand:"Gaegu","Nanum Pen Script","IBM Plex Sans KR",cursive;
+  --f-num:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#150E11;--surface:#211920;--ink:#F3E7EB;--muted:#AA939B;--line:#3A2C33;
+    --hot:#FF5C70;--cold:#80A8EC;--memo:#3A321E;--memo-ink:#F2E4B6;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#150E11;--surface:#211920;--ink:#F3E7EB;--muted:#AA939B;--line:#3A2C33;
+  --hot:#FF5C70;--cold:#80A8EC;--memo:#3A321E;--memo-ink:#F2E4B6;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--hot);outline-offset:2px;border-radius:6px}
+
+.wrap{max-width:680px;margin:0 auto;padding-block:20px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:28px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:22px;letter-spacing:.01em}
+.brand svg{width:22px;height:22px;fill:var(--hot)}
+.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.sync.on i{background:#2E9E5B}
+
+/* check-in */
+.checkin{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);
+  padding:24px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.q{font-weight:700;font-size:17px;text-wrap:balance}
+.readout{font-family:var(--f-display);font-size:clamp(76px,22vw,120px);line-height:1;display:flex;align-items:flex-start;
+  font-variant-numeric:tabular-nums;transition:color .2s}
+.readout .pc{font-size:.42em;margin-top:.18em;margin-left:.04em}
+.mood{font-family:var(--f-hand);font-size:24px;font-weight:700;color:var(--muted);min-height:1.3em}
+.slider-row{width:100%;display:flex;align-items:center;gap:10px;margin-top:6px}
+.step{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--bg);font-size:20px;line-height:1;cursor:pointer}
+.step:hover{border-color:var(--muted)}
+input[type=range]{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:32px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:99px;background:linear-gradient(90deg,var(--cold),var(--hot))}
+input[type=range]::-moz-range-track{height:10px;border-radius:99px;background:linear-gradient(90deg,var(--cold),var(--hot))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;margin-top:-10px;
+  background:var(--surface);border:3px solid var(--ink);box-shadow:0 2px 6px rgba(0,0,0,.18)}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--surface);border:3px solid var(--ink)}
+.scale{width:100%;display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:0 50px;font-family:var(--f-num)}
+.primary{margin-top:14px;border:0;border-radius:999px;padding:13px 34px;background:var(--ink);color:var(--bg);font-weight:700;font-size:16px;cursor:pointer;min-width:180px}
+.primary:hover{background:var(--hot);color:#fff}
+.primary:disabled{opacity:.45;cursor:default;background:var(--ink);color:var(--bg)}
+.hint{font-size:13px;color:var(--muted);margin:4px 0 0}
+
+.done{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  border:1px dashed var(--line);border-radius:16px;padding:14px 16px}
+.done p{margin:0}
+.done b{font-family:var(--f-display);font-weight:400;font-size:20px}
+.ghost{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 16px;cursor:pointer;font-size:14px}
+.ghost:hover{border-color:var(--muted)}
+
+/* sections */
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:700}
+.tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs button{border:0;background:transparent;border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat span{font-size:12px;color:var(--muted)}
+.stat b{font-family:var(--f-num);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
+@media (max-width:420px){.stats{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:12px}}
+
+.chart{position:relative;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:8px;touch-action:pan-y}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .axis{fill:var(--muted);font-family:var(--f-num);font-size:11px}
+.chart .line{fill:none;stroke:var(--hot);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .dot{fill:var(--hot)}
+.chart .ev-up{fill:var(--surface);stroke:var(--hot);stroke-width:2.5}
+.chart .ev-down{fill:var(--surface);stroke:var(--cold);stroke-width:2.5}
+.chart .last{fill:var(--hot);stroke:var(--surface);stroke-width:3}
+.chart .cursor{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.chart.example svg{opacity:.38}
+.chart.example .line{stroke-dasharray:6 6}
+.example-note{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;pointer-events:none}
+.example-note span{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--muted);box-shadow:var(--shadow);max-width:300px}
+.tip{position:absolute;top:0;left:0;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:10px;padding:8px 10px;font-size:12px;
+  width:max-content;max-width:220px;box-shadow:var(--shadow);z-index:2}
+.tip b{font-family:var(--f-num);font-size:15px}
+.tip .tn{font-family:var(--f-hand);font-size:16px;margin-top:2px;line-height:1.25}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;border:2.5px solid;margin-right:6px;vertical-align:-1px}
+
+/* events */
+.thr{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.thr select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:3px 6px;font-size:13px}
+.events{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.ev{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:start;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.ev:last-child{border-bottom:0}
+.ev-when{font-size:12px;color:var(--muted);font-family:var(--f-num)}
+.ev-jump{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-family:var(--f-num);font-size:18px}
+.ev-jump .arrow{color:var(--muted);font-size:14px}
+.chip{font-family:var(--f-num);font-size:12px;border-radius:999px;padding:1px 8px;font-weight:500;white-space:nowrap}
+.chip.up{background:color-mix(in oklab,var(--hot) 14%,transparent);color:var(--hot)}
+.chip.down{background:color-mix(in oklab,var(--cold) 16%,transparent);color:var(--cold)}
+.chip.flat{background:var(--line);color:var(--muted)}
+.memo{grid-column:1/-1;margin:2px 0 0;background:var(--memo);color:var(--memo-ink);font-family:var(--f-hand);font-size:19px;line-height:1.35;
+  padding:8px 12px;border-radius:4px 14px 14px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.ev-act{display:flex;gap:4px}
+.link{border:0;background:transparent;padding:4px 6px;font-size:13px;color:var(--muted);cursor:pointer;border-radius:6px;text-decoration:underline;text-underline-offset:3px}
+.link:hover{color:var(--ink)}
+.link.danger[data-armed]{color:var(--hot);text-decoration:none;font-weight:700}
+.add-memo{grid-column:1/-1;justify-self:start;border:1px dashed var(--line);background:transparent;border-radius:10px;padding:7px 12px;
+  font-family:var(--f-hand);font-size:18px;color:var(--muted);cursor:pointer}
+.add-memo:hover{border-color:var(--muted);color:var(--ink)}
+.empty{color:var(--muted);font-size:14px;margin:0;padding:8px 0}
+
+details{margin-top:18px}
+summary{cursor:pointer;font-size:14px;color:var(--muted);padding:6px 0}
+.all{list-style:none;margin:8px 0 0;padding:0}
+.row{display:grid;grid-template-columns:7.5em 3.2em 4.6em minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.row .t{font-family:var(--f-num);color:var(--muted);font-size:12px}
+.row .p{font-family:var(--f-num);font-weight:500;font-variant-numeric:tabular-nums}
+.row .n{text-align:left;text-decoration:none;font-family:var(--f-hand);font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:480px){.row{grid-template-columns:6.6em 2.8em 4.4em minmax(0,1fr) auto}.row .n{font-size:15px}}
+
+.foot{font-size:12px;color:var(--muted);text-align:center;margin:0}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:20;background:color-mix(in oklab,var(--ink) 45%,transparent);display:flex;align-items:flex-end;justify-content:center;
+  padding:16px max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+@media (min-width:560px){.modal{align-items:center}}
+.sheet{width:100%;max-width:440px;background:var(--surface);border-radius:22px;padding:22px 20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.3);
+  display:flex;flex-direction:column;gap:10px;animation:rise .22s ease-out}
+@keyframes rise{from{transform:translateY(12px);opacity:.6}to{transform:none;opacity:1}}
+.jump{font-family:var(--f-display);font-size:34px;line-height:1.1;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.jump .arrow{font-family:var(--f-body);font-size:20px;color:var(--muted)}
+.sheet h3{margin:0;font-size:20px}
+.sheet p{margin:0;color:var(--muted);font-size:14px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer}
+.tags button:hover{border-color:var(--muted)}
+textarea{width:100%;min-height:96px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--memo);color:var(--memo-ink);
+  font-family:var(--f-hand);font-size:20px;line-height:1.35}
+.mact{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap}
+.mact .primary{margin-top:0;min-width:0;padding:11px 22px;font-size:15px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;
+  background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 18px;font-size:14px;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center}
+.banner{border:1px solid var(--hot);color:var(--hot);border-radius:12px;padding:10px 14px;font-size:13px}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3.1 1.7-1.9 3.1-3.1 5.3-3.1 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z"/></svg>애정 지수</div>
+    <div class="sync" id="sync"><i></i><span>불러오는 중…</span></div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="checkin" id="checkin" aria-labelledby="q">
+    <div class="q" id="q">지금 여자친구가 얼마나 좋아?</div>
+    <div class="readout" aria-live="polite"><span id="val">70</span><span class="pc">%</span></div>
+    <div class="mood" id="mood">좋아</div>
+    <div class="slider-row">
+      <button class="step" id="minus" aria-label="5 내리기">−</button>
+      <input type="range" id="slider" min="0" max="100" step="1" value="70" aria-label="좋아하는 정도 (퍼센트)">
+      <button class="step" id="plus" aria-label="5 올리기">+</button>
+    </div>
+    <div class="scale" aria-hidden="true"><span>0</span><span>50</span><span>100</span></div>
+    <button class="primary" id="save" disabled>불러오는 중…</button>
+    <p class="hint" id="hint">들어올 때마다 지금 마음을 남겨 두세요.</p>
+  </section>
+
+  <section class="done" id="done" hidden>
+    <p>이번 접속 기록 완료 · <b id="doneVal">70%</b></p>
+    <button class="ghost" id="again">한 번 더 기록</button>
+  </section>
+
+  <section aria-labelledby="h-trend">
+    <div class="sec-head">
+      <h2 id="h-trend">변화 그래프</h2>
+      <div class="tabs" role="group" aria-label="기간">
+        <button data-range="7" aria-pressed="false">7일</button>
+        <button data-range="30" aria-pressed="false">30일</button>
+        <button data-range="all" aria-pressed="true">전체</button>
+      </div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="chart" id="chart">
+      <div class="plot" id="plot"></div>
+      <div class="example-note" id="exNote" hidden><span>예시 그래프예요. 기록이 2개 이상 쌓이면 내 그래프로 바뀌어요.</span></div>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+    <div class="legend"><span><i style="border-color:var(--hot)"></i>급상승</span><span><i style="border-color:var(--cold)"></i>급하락</span><span>점을 누르면 그때 메모가 보여요</span></div>
+  </section>
+
+  <section aria-labelledby="h-ev">
+    <div class="sec-head">
+      <h2 id="h-ev">급변 기록</h2>
+      <label class="thr" for="thr">급변 기준
+        <select id="thr">
+          <option value="10">±10%p</option><option value="15">±15%p</option><option value="20" selected>±20%p</option>
+          <option value="30">±30%p</option><option value="40">±40%p</option>
+        </select>
+      </label>
+    </div>
+    <ol class="events" id="events"></ol>
+    <details id="allWrap">
+      <summary>모든 기록 (<span id="count">0</span>)</summary>
+      <ol class="all" id="all"></ol>
+    </details>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="jump" id="mJump"></div>
+    <h3 id="mTitle">무슨 일 있었어?</h3>
+    <p id="mSub"></p>
+    <div class="tags" id="mTags"></div>
+    <textarea id="mNote" placeholder="예) 기념일 깜빡해서 서운하게 함…"></textarea>
+    <div class="mact">
+      <button class="ghost" id="mSkip">나중에</button>
+      <button class="primary" id="mSave">기록 남기기</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const DAY=86400000;
+const LS_KEY='aejeong-meter-v1';
+const state={entries:[],threshold:20,range:'all',ready:false,mode:'pending',saved:null,checkinOpen:true,modal:null};
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tone=p=>`color-mix(in oklab, var(--hot) ${p}%, var(--cold))`;
+function moodWord(p){
+  if(p>=95)return'세상에서 제일 좋아';if(p>=80)return'완전 좋아';if(p>=65)return'좋아';
+  if(p>=50)return'그럭저럭';if(p>=35)return'조금 서운해';if(p>=20)return'많이 서운해';if(p>=8)return'화났어';return'말 걸지 마';
+}
+const WD=['일','월','화','수','목','금','토'];
+const pad=n=>String(n).padStart(2,'0');
+function fmtWhen(ts){const d=new Date(ts);return`${d.getMonth()+1}/${d.getDate()} (${WD[d.getDay()]}) ${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function ago(ts){const m=Math.round((Date.now()-ts)/60000);if(m<1)return'방금';if(m<60)return`${m}분 전`;const h=Math.round(m/60);if(h<24)return`${h}시간 전`;return`${Math.round(h/24)}일 전`}
+function deltaChip(d){if(d==null)return'<span class="chip flat">첫 기록</span>';if(d===0)return'<span class="chip flat">±0%p</span>';
+  return`<span class="chip ${d>0?'up':'down'}">${d>0?'+':'−'}${Math.abs(d)}%p</span>`}
+const newId=()=>'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+let toastT;function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+function banner(msg){const b=$('#banner');b.textContent=msg;b.hidden=!msg}
+
+/* derived: entries ascending with delta vs previous */
+function derived(){
+  const e=[...state.entries].sort((a,b)=>a.ts-b.ts);
+  return e.map((x,i)=>({...x,delta:i?x.pct-e[i-1].pct:null,prev:i?e[i-1]:null}));
+}
+const isSudden=(x,thr)=>x.delta!=null&&Math.abs(x.delta)>=thr;
+
+/* ---------- stores ---------- */
+const local={
+  init(){let d=null;try{d=JSON.parse(localStorage.getItem(LS_KEY))}catch(e){}
+    state.entries=(d&&Array.isArray(d.entries))?d.entries:[];state.threshold=(d&&d.threshold)||20},
+  persist(){try{localStorage.setItem(LS_KEY,JSON.stringify({entries:state.entries,threshold:state.threshold}))}catch(e){}},
+  async add(e){state.entries=[...state.entries,e];this.persist();render()},
+  async setNote(id,note){state.entries=state.entries.map(x=>x.id===id?{...x,note}:x);this.persist();render()},
+  async remove(id){state.entries=state.entries.filter(x=>x.id!==id);this.persist();render()},
+  async setThreshold(t){state.threshold=t;this.persist();render()}
+};
+const remote={
+  coll:null,settings:null,
+  init(db,uid){
+    this.coll=db.doc(`data/users/${uid}/meter`).collection('entries');
+    this.settings=db.doc(`data/users/${uid}/settings`);
+    this.coll.orderBy('ts','desc').limit(1000).onSnapshot(snap=>{
+      state.entries=snap.docs.map(d=>({id:d.id,...d.data()})).reverse();
+      state.ready=true;render();
+    },()=>banner('기록을 불러오지 못했어요. 페이지를 새로고침해 주세요.'));
+    this.settings.onSnapshot(s=>{if(s.exists){const t=s.data().threshold;if(typeof t==='number')state.threshold=t}render()},()=>{});
+  },
+  async add(e){const{id,...body}=e;await this.coll.doc(id).set(body)},
+  async setNote(id,note){await this.coll.doc(id).update({note})},
+  async remove(id){await this.coll.doc(id).delete()},
+  async setThreshold(t){state.threshold=t;render();await this.settings.set({threshold:t})}
+};
+let store=null;
+
+async function boot(){
+  render();
+  let db=null,user=null,uid=null;
+  try{
+    if(window.claude&&typeof window.claude.use==='function'){
+      [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+      if(user)uid=await user.id();
+      if(user&&typeof user.can==='function'&&(await user.can('data.write'))===false)uid=null;
+    }
+  }catch(e){}
+  if(db&&uid){
+    store=remote;state.mode='cloud';
+    try{remote.init(db,uid)}catch(e){store=local;state.mode='local';local.init();state.ready=true}
+  }else{
+    store=local;state.mode='local';local.init();state.ready=true;
+  }
+  render();
+}
+
+/* ---------- check-in ---------- */
+const slider=$('#slider');
+let sliderTouched=false;
+function paintReadout(){
+  const p=+slider.value;
+  $('#val').textContent=p;
+  $('.readout').style.color=tone(p);
+  $('#mood').textContent=moodWord(p);
+}
+slider.addEventListener('input',()=>{sliderTouched=true;paintReadout()});
+$('#minus').onclick=()=>{slider.value=Math.max(0,+slider.value-5);sliderTouched=true;paintReadout()};
+$('#plus').onclick=()=>{slider.value=Math.min(100,+slider.value+5);sliderTouched=true;paintReadout()};
+
+$('#save').onclick=async()=>{
+  if(!store)return;
+  const pct=+slider.value;
+  const all=derived();
+  const prev=all[all.length-1]||null;
+  const e={id:newId(),ts:Date.now(),pct,note:''};
+  const btn=$('#save');btn.disabled=true;
+  try{await store.add(e)}
+  catch(err){
+    if(err&&err.code==='invalid_argument'&&store===remote){
+      store=local;state.mode='local';local.init();state.ready=true;
+      try{await store.add(e)}catch(e2){btn.disabled=false;toast('저장하지 못했어요.');return}
+    }else{btn.disabled=false;toast('저장하지 못했어요. 잠시 후 다시 눌러 주세요.');return}
+  }
+  state.saved=pct;state.checkinOpen=false;
+  if(prev&&Math.abs(pct-prev.pct)>=state.threshold){
+    openNote({...e,delta:pct-prev.pct,prev},true);
+  }else toast(`기록했어요 · ${pct}%`);
+  render();
+};
+$('#again').onclick=()=>{state.checkinOpen=true;render();slider.focus()};
+
+/* ---------- note modal ---------- */
+const TAGS_DOWN=['싸웠어','연락이 뜸해','서운한 말 들음','약속 취소','내가 잘못함','그냥 피곤해'];
+const TAGS_UP=['데이트했어','화해했어','선물 받음','감동받음','많이 웃었어','보고 싶었어'];
+function openNote(entry,sudden){
+  state.modal={id:entry.id};
+  const d=entry.delta;
+  $('#mJump').innerHTML=entry.prev
+    ?`<span style="color:${tone(entry.prev.pct)}">${entry.prev.pct}%</span><span class="arrow">→</span><span style="color:${tone(entry.pct)}">${entry.pct}%</span>`
+    :`<span style="color:${tone(entry.pct)}">${entry.pct}%</span>`;
+  $('#mTitle').textContent=sudden?(d<0?'무슨 일 있었어?':'무슨 좋은 일 있었어?'):'그때 무슨 일이었어?';
+  $('#mSub').textContent=sudden
+    ?`지난 기록보다 ${Math.abs(d)}%p ${d<0?'떨어졌어요':'올랐어요'}. 나중에 이유를 떠올릴 수 있게 적어 두세요.`
+    :`${fmtWhen(entry.ts)} 기록`;
+  const tags=(d!=null&&d<0)?TAGS_DOWN:(d!=null&&d>0)?TAGS_UP:[...TAGS_UP.slice(0,3),...TAGS_DOWN.slice(0,3)];
+  $('#mTags').innerHTML=tags.map(t=>`<button type="button">${esc(t)}</button>`).join('');
+  $('#mNote').value=entry.note||'';
+  $('#mSkip').textContent=sudden?'나중에':'취소';
+  $('#modal').hidden=false;
+  setTimeout(()=>$('#mNote').focus(),30);
+}
+function closeNote(){$('#modal').hidden=true;state.modal=null}
+$('#mTags').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const ta=$('#mNote');const v=ta.value.trim();
+  ta.value=v?`${v}, ${b.textContent}`:b.textContent;ta.focus();
+});
+$('#mSkip').onclick=closeNote;
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeNote()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden)closeNote()});
+$('#mSave').onclick=async()=>{
+  if(!state.modal)return;
+  const id=state.modal.id,note=$('#mNote').value.trim();
+  try{await store.setNote(id,note);closeNote();toast(note?'메모를 남겼어요':'메모를 비웠어요')}
+  catch(e){toast('메모를 저장하지 못했어요. 다시 눌러 주세요.')}
+};
+
+/* ---------- list actions ---------- */
+document.addEventListener('click',async e=>{
+  const nb=e.target.closest('[data-note]');
+  if(nb){const x=derived().find(v=>v.id===nb.dataset.note);if(x)openNote(x,false);return}
+  const db=e.target.closest('[data-del]');
+  if(db){
+    if(!db.hasAttribute('data-armed')){
+      db.setAttribute('data-armed','');db.textContent='정말 삭제?';
+      setTimeout(()=>{if(db.isConnected){db.removeAttribute('data-armed');db.textContent='삭제'}},3000);return;
+    }
+    try{await store.remove(db.dataset.del);toast('삭제했어요')}catch(err){toast('삭제하지 못했어요.')}
+  }
+});
+$('#thr').addEventListener('change',e=>{store&&store.setThreshold(+e.target.value).catch(()=>toast('기준을 저장하지 못했어요.'))});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{state.range=b.dataset.range;render()});
+
+/* ---------- chart ---------- */
+let screenPts=[];
+function visible(all){
+  if(state.range==='all')return all;
+  const from=Date.now()-(+state.range)*DAY;
+  return all.filter(x=>x.ts>=from);
+}
+function exampleData(){
+  const now=Date.now(),vals=[64,70,68,86,82,44,58,75];
+  const notes={3:'예시: 기념일 데이트',5:'예시: 연락 문제로 다툼'};
+  return vals.map((p,i)=>({id:'x'+i,ts:now-(vals.length-1-i)*DAY,pct:p,note:notes[i]||'',delta:i?p-vals[i-1]:null}));
+}
+function drawChart(all){
+  const box=$('#chart');
+  let pts=visible(all),example=false;
+  if(pts.length<2){example=true;pts=exampleData()}
+  box.classList.toggle('example',example);
+  $('#exNote').hidden=!example;
+  const W=Math.max(280,Math.round(box.clientWidth||640)),H=W<520?220:260;
+  const P={l:34,r:14,t:14,b:26};
+  const t0=pts[0].ts,t1=Math.max(pts[pts.length-1].ts,t0+3600000);
+  const X=t=>P.l+(t-t0)/(t1-t0)*(W-P.l-P.r);
+  const Y=p=>P.t+(100-p)/100*(H-P.t-P.b);
+  const thr=state.threshold;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="애정 지수 변화 그래프"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" style="stop-color:var(--hot);stop-opacity:.22"/><stop offset="1" style="stop-color:var(--hot);stop-opacity:0"/></linearGradient></defs>`;
+  [0,25,50,75,100].forEach(v=>{s+=`<line class="grid" x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axis" x="${P.l-8}" y="${Y(v)+4}" text-anchor="end">${v}</text>`});
+  const span=t1-t0,n=W<520?3:5;
+  for(let i=0;i<n;i++){
+    const t=t0+span*i/(n-1),d=new Date(t);
+    const lab=span<=2*DAY?`${pad(d.getHours())}:${pad(d.getMinutes())}`:`${d.getMonth()+1}/${d.getDate()}`;
+    const anchor=i===0?'start':i===n-1?'end':'middle';
+    s+=`<text class="axis" x="${X(t)}" y="${H-6}" text-anchor="${anchor}">${lab}</text>`;
+  }
+  const line=pts.map((p,i)=>`${i?'L':'M'}${X(p.ts).toFixed(1)},${Y(p.pct).toFixed(1)}`).join('');
+  s+=`<path d="${line}L${X(pts[pts.length-1].ts).toFixed(1)},${Y(0)}L${X(pts[0].ts).toFixed(1)},${Y(0)}Z" fill="url(#ag)"/>`;
+  s+=`<path class="line" d="${line}"/>`;
+  s+=`<line class="cursor" id="cur" x1="0" x2="0" y1="${P.t}" y2="${Y(0)}" visibility="hidden"/>`;
+  screenPts=[];
+  pts.forEach((p,i)=>{
+    const x=X(p.ts),y=Y(p.pct),last=i===pts.length-1;
+    const sud=isSudden(p,thr);
+    screenPts.push({x,y,p,W});
+    if(last)s+=`<circle class="last" cx="${x}" cy="${y}" r="6"/>`;
+    else if(sud)s+=`<circle class="${p.delta>0?'ev-up':'ev-down'}" cx="${x}" cy="${y}" r="6"/>`;
+    else if(pts.length<=90)s+=`<circle class="dot" cx="${x}" cy="${y}" r="${p.note?3.5:2.5}"/>`;
+  });
+  s+='</svg>';
+  $('#plot').innerHTML=s;
+  box.dataset.ex=example?'1':'';
+}
+function showTip(clientX){
+  if(!screenPts.length)return;
+  const box=$('#chart'),r=box.querySelector('svg').getBoundingClientRect();
+  const W=screenPts[0].W,scale=r.width/W;
+  const lx=(clientX-r.left)/scale;
+  let best=screenPts[0];for(const q of screenPts)if(Math.abs(q.x-lx)<Math.abs(best.x-lx))best=q;
+  const p=best.p,tip=$('#tip');
+  tip.innerHTML=`<div>${fmtWhen(p.ts)}</div><div><b>${p.pct}%</b> ${p.delta!=null?`<span>${p.delta>0?'+':p.delta<0?'−':'±'}${Math.abs(p.delta)}%p</span>`:''}</div>${p.note?`<div class="tn">${esc(p.note)}</div>`:''}`;
+  tip.hidden=false;
+  const boxR=box.getBoundingClientRect();
+  const px=best.x*scale+(r.left-boxR.left),py=best.y*scale+(r.top-boxR.top);
+  const tw=tip.offsetWidth,th=tip.offsetHeight;
+  let left=Math.min(Math.max(px-tw/2,0),boxR.width-tw);
+  let top=py-th-14;if(top<0)top=py+14;
+  tip.style.transform=`translate(${left}px,${top}px)`;
+  const cur=document.getElementById('cur');if(cur){cur.setAttribute('x1',best.x);cur.setAttribute('x2',best.x);cur.setAttribute('visibility','visible')}
+}
+function hideTip(){$('#tip').hidden=true;const cur=document.getElementById('cur');if(cur)cur.setAttribute('visibility','hidden')}
+const chartEl=$('#chart');
+chartEl.addEventListener('pointermove',e=>showTip(e.clientX));
+chartEl.addEventListener('pointerdown',e=>showTip(e.clientX));
+chartEl.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')hideTip()});
+let rzT;new ResizeObserver(()=>{clearTimeout(rzT);rzT=setTimeout(()=>{hideTip();drawChart(derived())},60)}).observe(chartEl);
+
+/* ---------- render ---------- */
+function render(){
+  const all=derived(),last=all[all.length-1];
+  const ready=state.ready&&!!store;
+
+  const sync=$('#sync');
+  sync.classList.toggle('on',state.mode==='cloud'&&ready);
+  sync.querySelector('span').textContent=!ready?'불러오는 중…':state.mode==='cloud'?'내 계정에 저장 중':'이 브라우저에 저장 중';
+  $('#foot').textContent=state.mode==='cloud'
+    ?'기록은 내 계정에만 저장돼요. 이 링크를 다른 사람이 열어도 내 기록은 보이지 않아요.'
+    :state.mode==='local'?'지금은 이 브라우저에만 저장돼요. 브라우저 데이터를 지우면 기록도 사라져요.':'';
+
+  if(!sliderTouched&&last){slider.value=last.pct}
+  paintReadout();
+  const save=$('#save');save.disabled=!ready;save.textContent=ready?'기록하기':'불러오는 중…';
+  $('#hint').textContent=last?`지난번 ${last.pct}% · ${ago(last.ts)} · 지금 마음을 남겨 주세요`:'들어올 때마다 지금 마음을 남겨 두세요. 첫 기록부터 그래프가 시작돼요.';
+  $('#checkin').hidden=!state.checkinOpen;
+  $('#done').hidden=state.checkinOpen;
+  if(state.saved!=null){$('#doneVal').textContent=state.saved+'%';$('#doneVal').style.color=tone(state.saved)}
+
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.range===state.range)));
+  $('#thr').value=String(state.threshold);
+
+  const vis=visible(all),thr=state.threshold;
+  const nums=vis.map(x=>x.pct);
+  const avg=nums.length?Math.round(nums.reduce((a,b)=>a+b,0)/nums.length):null;
+  const stat=(k,v,c)=>`<div class="stat"><span>${k}</span><b${c!=null?` style="color:${tone(c)}"`:''}>${v}</b></div>`;
+  $('#stats').innerHTML=
+    stat('지금',last?last.pct+'%':'—',last?last.pct:null)+
+    stat('평균',avg!=null?avg+'%':'—',avg)+
+    stat('최고 / 최저',nums.length?`${Math.max(...nums)} / ${Math.min(...nums)}`:'—')+
+    stat('급변',vis.filter(x=>isSudden(x,thr)).length+'번');
+
+  drawChart(all);
+
+  const evs=all.filter(x=>isSudden(x,thr)||x.note).reverse();
+  $('#events').innerHTML=evs.length?evs.map(x=>`
+    <li class="ev">
+      <div>
+        <div class="ev-when">${fmtWhen(x.ts)}</div>
+        <div class="ev-jump">${x.prev?`<span style="color:${tone(x.prev.pct)}">${x.prev.pct}%</span><span class="arrow">→</span>`:''}<span style="color:${tone(x.pct)}">${x.pct}%</span>${deltaChip(x.delta)}</div>
+      </div>
+      <div class="ev-act">${x.note?`<button class="link" data-note="${x.id}">수정</button>`:''}<button class="link danger" data-del="${x.id}">삭제</button></div>
+      ${x.note?`<p class="memo">${esc(x.note)}</p>`:`<button class="add-memo" data-note="${x.id}">+ 무슨 일이었는지 적기</button>`}
+    </li>`).join('')
+    :`<li><p class="empty">아직 급격한 변화가 없어요. 지난 기록보다 ±${thr}%p 넘게 바뀌면 이유를 적는 창이 뜨고, 여기에 모여요.</p></li>`;
+
+  $('#count').textContent=all.length;
+  $('#all').innerHTML=all.length?[...all].reverse().slice(0,300).map(x=>`
+    <li class="row">
+      <span class="t">${fmtWhen(x.ts)}</span>
+      <span class="p" style="color:${tone(x.pct)}">${x.pct}%</span>
+      <span>${deltaChip(x.delta)}</span>
+      <button class="link n" data-note="${x.id}" title="메모">${x.note?esc(x.note):'메모 추가'}</button>
+      <button class="link danger" data-del="${x.id}">삭제</button>
+    </li>`).join(''):'<li><p class="empty">아직 기록이 없어요.</p></li>';
+}
+
+boot();
+})();
+</script>
